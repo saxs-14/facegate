@@ -1,4 +1,4 @@
-const API_BASE = "";
+const API_BASE = "https://facegate-607032555709.us-central1.run.app";
 
 export interface Person {
   id: number;
