@@ -145,8 +145,11 @@ SQLite (`facegate.db`): `admin_users`, `enrolled_persons`, `access_events`, `aud
 ## Security considerations
 
 - Passwords hashed with bcrypt (never stored/logged in plaintext)
-- JWT-based auth on all enrollment/recognition/admin endpoints
-- Login endpoint rate-limited (in-memory, per-IP) against brute force
+- JWT-based auth on **all** endpoints except `/api/health` and `/api/auth/login` itself —
+  event history and dashboard stats now require a valid admin token too, not just
+  enrollment/recognition
+- Login endpoint rate-limited (in-memory, per-IP) against brute force; enrollment and
+  recognition endpoints rate-limited (20 req/60s/IP) against abuse
 - Upload content-type and size validated server-side
 - CORS restricted to configured origins
 - No secrets in source; `.env` gitignored, `.env.example` documents required vars

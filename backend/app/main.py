@@ -1,9 +1,10 @@
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
 from app.database import Base, engine, SessionLocal
-from app.auth import ensure_default_admin
+from app.auth import ensure_default_admin, get_current_admin
+from app.rate_limit import rate_limit
 from app.routers import health, auth_router, enroll, recognize, events
 
 Base.metadata.create_all(bind=engine)
@@ -23,9 +24,9 @@ app.add_middleware(
 
 app.include_router(health.router)
 app.include_router(auth_router.router)
-app.include_router(enroll.router)
-app.include_router(recognize.router)
-app.include_router(events.router)
+app.include_router(enroll.router, dependencies=[Depends(rate_limit(max_requests=20, window_seconds=60))])
+app.include_router(recognize.router, dependencies=[Depends(rate_limit(max_requests=20, window_seconds=60))])
+app.include_router(events.router, dependencies=[Depends(get_current_admin)])
 
 
 @app.get("/")

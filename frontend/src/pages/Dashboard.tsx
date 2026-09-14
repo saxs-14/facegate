@@ -23,19 +23,14 @@ export default function Dashboard() {
   const [lastResult, setLastResult] = useState<AccessEvent | null>(null);
 
   const refresh = useCallback(async () => {
+    if (!token) return;
     try {
-      const [s, e] = await Promise.all([api.summary(), api.events()]);
+      const [s, e, p] = await Promise.all([api.summary(token), api.events(token), api.listEnrolled(token)]);
       setSummary(s);
       setEvents(e);
+      setPeople(p);
     } catch {
-      /* backend offline - surfaced via apiOnline */
-    }
-    if (token) {
-      try {
-        setPeople(await api.listEnrolled(token));
-      } catch {
-        /* token may have expired */
-      }
+      /* backend offline or token expired - surfaced via apiOnline / login gate */
     }
   }, [token]);
 
@@ -275,12 +270,16 @@ export default function Dashboard() {
           </>
         )}
 
+        {token && (
         <section className="rounded-xl border border-slate-800 bg-slate-900/60 p-5">
           <div className="flex items-center justify-between mb-4">
             <h2 className="font-semibold">Access event history</h2>
-            <a href={api.exportCsvUrl()} className="text-sm rounded-lg border border-slate-700 hover:border-slate-500 transition px-3 py-1.5">
+            <button
+              onClick={() => api.exportEvents(token)}
+              className="text-sm rounded-lg border border-slate-700 hover:border-slate-500 transition px-3 py-1.5"
+            >
               Export CSV
-            </a>
+            </button>
           </div>
           {events.length === 0 ? (
             <p className="text-sm text-slate-500">No events recorded yet.</p>
@@ -307,6 +306,7 @@ export default function Dashboard() {
             </table>
           )}
         </section>
+        )}
       </main>
     </div>
   );

@@ -45,11 +45,25 @@ export const api = {
       method: "POST",
     }).then((r) => json<{ access_token: string }>(r)),
 
-  summary: () => fetch(`${API_BASE}/api/dashboard/summary`).then((r) => json<DashboardSummary>(r)),
+  summary: (token: string) =>
+    fetch(`${API_BASE}/api/dashboard/summary`, { headers: authHeaders(token) }).then((r) => json<DashboardSummary>(r)),
 
-  events: () => fetch(`${API_BASE}/api/events`).then((r) => json<AccessEvent[]>(r)),
+  events: (token: string) =>
+    fetch(`${API_BASE}/api/events`, { headers: authHeaders(token) }).then((r) => json<AccessEvent[]>(r)),
 
-  exportCsvUrl: () => `${API_BASE}/api/events/export`,
+  exportEvents: async (token: string) => {
+    const res = await fetch(`${API_BASE}/api/events/export`, { headers: authHeaders(token) });
+    if (!res.ok) throw new Error(await res.text().catch(() => res.statusText));
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "facegate_events.csv";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  },
 
   listEnrolled: (token: string) =>
     fetch(`${API_BASE}/api/enroll`, { headers: authHeaders(token) }).then((r) => json<Person[]>(r)),

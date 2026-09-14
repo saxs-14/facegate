@@ -15,8 +15,14 @@ def _token():
     return r.json()["access_token"]
 
 
-def test_dashboard_summary_shape():
+def test_dashboard_summary_requires_auth():
     r = client.get("/api/dashboard/summary")
+    assert r.status_code == 401
+
+
+def test_dashboard_summary_shape():
+    token = _token()
+    r = client.get("/api/dashboard/summary", headers={"Authorization": f"Bearer {token}"})
     assert r.status_code == 200
     for key in ["total_enrolled", "total_events", "unknown_events", "events_today", "confidence_threshold"]:
         assert key in r.json()
